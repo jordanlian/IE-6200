@@ -1,0 +1,144 @@
+---
+title: "Lab 2 - IE 6200 - Sec 09"
+author: "Jordan Lian"
+date: "9/29/2020"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Problem Statement
+For this lab assignment, I used my notes from class and the Lab 2 packet to help me complete the 4 tasks assigned. I also used my probability notes to double check the probabilities and sample spaces determined in the tasks below.
+
+# Output
+
+## Task 1
+Consider an experiment of rolling a die three times. Calculate the probabilities for the following events
+```{r Task 1}
+library(prob)
+R3 <- rolldie(times = 3, nsides = 6, makespace = TRUE) 
+```
+
+a) Find the probability of getting the same numbers on all three rolls of a die.
+```{r}
+a <- subset(R3, X1 == X2 & X2 == X3) 
+a
+Prob(a) 
+```
+
+b) Find the probability such that the sum of numbers on all three rolls of a die is greater than 6.
+```{r}
+b <- subset(R3, X1 + X2 + X3 > 6)
+Prob(b)
+```
+
+c) Find the probablility of getting the number 2 on the first and second roll of a die and any number on
+the third roll of a die
+
+```{r cars}
+c <- subset(R3, X1 == 2 & X2 == 2)
+c
+Prob(c) 
+```
+
+## Task 2
+Consider an experiment of tossing a coin three times. Calculate the probabilities for the following events
+```{r}
+T3 = tosscoin(times = 3, makespace = TRUE)
+T3
+```
+a) Getting head on the first toss.
+```{r}
+a <- subset(T3, toss1 == "H")
+a
+Prob(a)
+```
+b) Getting tails on the last toss
+```{r}
+b <- subset(T3, toss3 == "T")
+b
+Prob(b)
+```
+c) Getting all heads
+```{r}
+c <- subset(T3, toss1 == "H" & toss1 == toss2 & toss2 == toss3)
+c
+Prob(c)
+```
+d) Getting at least 1 tail
+```{r}
+d <- subset(T3, toss1 == "T" | toss2 == "T" | toss3 == "T")
+d
+Prob(d)
+```
+## Task 3
+Consider an experiment of sampling 2 balls from a urn containing 3 colored balls { red, green ,blue}. Provide
+only the sample space for the following conditions. Keep **ordered** = \textcolor{red}{TRUE} and **replacement** = \textcolor{red}{TRUE}.
+
+### Note: No need to find the probability for this problem only provide the sample space.
+```{r}
+balls <- c("red", "green", "blue")
+
+task3 = urnsamples(balls, size = 2, replace = TRUE, ordered = TRUE)
+task3
+```
+
+a) All balls are of the same color
+```{r}
+same_color = subset(task3, X1 == X2)
+same_color
+```
+
+b) At least 1 red colored ball
+```{r}
+red_color = subset(task3, X1 == "red" | X2 == "red")
+red_color
+```
+
+## Task 4 
+Consider an experiment of drawing cards from a pack of cards. Calculate the following probabilities.
+```{r}
+draw_cards = cards(jokers = FALSE, makespace = TRUE)
+draw_cards
+```
+
+a) The card belongs to the suit of diamonds.
+```{r}
+a <- subset(draw_cards, suit == "Diamond")
+a
+
+Prob(a)
+```
+
+b) The card belongs to the suit of hearts and has a rank K.
+```{r}
+b <- subset(draw_cards, suit == "Heart" & rank == "K")
+b
+
+Prob(b)
+```
+
+c) The card is either a Ace, King, Queen, Jack.
+```{r}
+c <- subset(draw_cards, rank == "J" | rank == "Q" | rank == "K" | rank == "A")
+c
+
+Prob(c)
+```
+
+d) The card is an Ace given it belongs to suit of clubs.
+```{r}
+d1 <- subset(draw_cards, suit == "Club")
+d1
+
+d2 <- subset(d1, rank == "A")
+d2
+
+Prob(d2, given = d1)
+```
+
+# Conclusion
+There were a lot of probabilities and sample spaces calculated in this lab. There was not much to deduce from these probabilities, as they were relatively straightforward. Regardless, this lab has made me more comfortable with conditional probability and R programming, which will serve me well going forward.
