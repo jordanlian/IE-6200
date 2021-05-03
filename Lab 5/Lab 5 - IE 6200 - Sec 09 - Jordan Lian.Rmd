@@ -1,0 +1,182 @@
+---
+title: "Lab 5 - IE 6200 - Sec 09 - Jordan Lian"
+author: "Jordan Lian"
+date: "11/13/2020"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Problem Statement
+My understanding of the assignments comes from the most recent chapters, where we combined the basic probability concepts to understand different types of continuous and discrete distributions. I used the packet to solve the tasks for the lab, which is what I usually do for most lab assignments.
+
+# Output
+\textcolor{blue}{Question 1:} On average, 4 traffic accidents per month occur at a certain intersection. What is the probability that in any given month at this intersection
+
+X: RV, traffic accidents per month, $\mu = 4$ accidents
+
+(a) exactly 4 accidents will occur?
+```{r 1a}
+# p(X = 4 accidents)
+dpois(4, 4)
+```
+
+(b) fewer than 3 accidents will occur?
+```{r 1b}
+# p(X < 3 accidents) = p(X <= 2 accidents)
+ppois(2, 4)
+```
+
+(c) at least 2 accidents will occur?
+```{r 1c}
+# p(X >= 2 accidents) = 1 - p(X < 2 accidents)
+1 - ppois(1, 4)
+```
+
+\textcolor{blue}{Question 2:} The probabilities are 0.4, 0.2, 0.3, and 0.1, respectively, that a delegate to a certain convention arrived by air, bus, automobile, or train.
+
+#### p(air) = 0.4, p(bus) = 0.2, p(automobile) = 0.3, p(train) = 0.1
+(a) What is the probability that among 9 delegates randomly selected at this convention, 3 arrived by air, 3 arrived by bus, 1 arrived by automobile, and 2 arrived by train?
+```{r 2a}
+# 3 by air, 3 by bus, 1 by automobile, 2 by train
+dmultinom(x=c(3, 3, 1, 2), size=9, prob=c(0.4, 0.2, 0.3, 0.1))
+```
+
+(b) What is the probability that among 6 delegates randomly selected at this convention, 2 arrived by air, 2 arrived by bus, 1 arrived by automobile, and 1 arrived by train?
+```{r 2b}
+# 2 by air, 2 by bus, 1 by automobile, 1 by train
+dmultinom(x=c(2, 2, 1, 1), size=6, prob=c(0.4, 0.2, 0.3, 0.1))
+```
+
+\textcolor{blue}{Question 3:} A research scientist reports that mice will live an average of 40 months when their diets are sharply restricted and then enriched with vitamins and proteins. If the lifetimes of such mice are normally distributed with a standard deviation of 6.3 months, find the probability that a given mouse will live
+
+X: RV, lifetime of mice, $\mu = 40$ months, $\sigma = 6.3$ months
+
+(a) more than 32 months
+```{r 3a}
+# p(X > 32 months)
+1 - pnorm(32, mean=40, sd=6.3)
+```
+
+(b) less than 28 months
+```{r 3b}
+# p(X < 28 months)
+pnorm(28, mean=40, sd=6.3)
+```
+
+(c) between 37 and 49 months
+```{r 3c}
+# p(37 < X < 49 months)
+pnorm(49, mean=40, sd=6.3) - pnorm(37, mean=40, sd=6.3)
+```
+
+\textcolor{blue}{Question 4:} A large company has an inspection system for the batches of small compressors purchased from vendors. A batch typically contains 15 compressors. In the inspection system, a random sample of 5 is selected and all are tested. Suppose there are 2 faulty compressors in the batch of 15.
+
+X: RV, number of faulty compressors, N = 15 compressors, k = 5 chosen, m = 2 faulty compressors, n = 13 non-faulty compressors
+
+(a) What is the probability that for a given sample there will be 1 faulty compressor?
+```{r 4a}
+# p(X = 1)
+dhyper(1, m=2, n=13, k=5)
+```
+
+(b) What is the probability that inspection will discover both faulty compressors?
+```{r 4b}
+# p(X = 2)
+dhyper(2, m=2, n=13, k=5)
+```
+
+\textcolor{blue}{Question 5:} If the probability that a fluorescent light has a useful life of at least 800 hours is 0.9, find the probabilities that among 20 such lights
+
+X: RV, number of fluorescent lights with a useful life of at least 800 hours, p(useful life >= 800 hours = 0.9), sample of 20 
+
+(a) exactly 18 will have a useful life of at least 800 hours
+```{r 5a}
+# p(X = 18)
+dbinom(18, size=20, prob=0.9)
+```
+
+(b) at least 15 will have a useful life of at least 800 hours
+```{r 5b}
+# p(X >= 15) = 1 - p(X <= 14)
+1 - pbinom(14, size=20, prob=0.9)
+```
+
+(c) at least 2 will not have a useful life of at least 800 hours
+```{r 5c}
+# p(X >= 2 will not have a useful life > 800 hrs), 1 - p(X <= 1), p = 0.1
+1 - pbinom(1, size=20, prob=0.1) 
+
+```
+
+\textcolor{blue}{Question 6:} The time intervals between successive barges passing a certain point on a busy waterway have an exponential distribution with mean 8 minutes.
+
+X: RV, time intervals between successive barges, exponential distribution, $\lambda = 8$
+
+(a) Find the probability that the time interval between two successive barges is less than 5 minutes.
+```{r 6a}
+# p(X < 5 mins)
+pexp(5, 1/8)
+```
+
+(b) Find the probability that the time interval between two successive barges is between than 4 to 6 minutes.
+```{r 6b}
+# p(4 min < X < 6 min)
+pexp(6, 1/8) - pexp(4, 1/8)
+```
+
+\textcolor{blue}{Question 7:} The daily amount of coffee, in liters, dispensed by a machine located in an airport lobby is a random variable X having a continuous uniform distribution with $A = 7$ and $B = 10$. Find the probability that on a given day the amount of coffee dispensed by this machine will be
+
+X: RV, daily amount of coffee in liters
+
+(a) at most 8.8 liters
+```{r 7a}
+# p(X < 8.8)
+punif(8.8, 7, 10) 
+```
+
+(b) more than 7.4 liters but less than 9.5 liters
+```{r 7b}
+# p(7.4 < X < 9.5)
+punif(9.5, 7, 10) - punif(7.4, 7, 10)
+```
+
+(c) at least 8.5 liters
+```{r 7c}
+# p(x > 8.5)
+1 - punif(8.5, 7, 10)
+```
+
+
+\textcolor{blue}{Question 8:} The probability that a student pilot passes the written test for a private pilot’s license is 0.7. Find the probability that a given student will pass the test:
+
+X: RV, # tries it takes or student to pass a written pilot license test
+
+(a) on the third try
+```{r 8a}
+# p(passes test on the third try), k = 3, subtract 1
+dgeom(2, prob=0.7)
+```
+
+(b) on the first try
+```{r 8b}
+# p(k == 1)
+dgeom(0, prob=0.7)
+```
+
+\textcolor{blue}{Question 9:} Rate data often follow a lognormal distribution. Average power usage (dB per hour) for a company is studied and is known to have a lognormal distribution with parameters $\mu = 4$ and $\sigma = 2.$
+
+X: RV, average power usage (dB per hour), lognormal distribution
+
+(a) What is the probability that the company uses more than 270 dB during a particular hour?
+```{r 9a}
+# p(X > 270 dB during 1 hour)
+1 - plnorm(q=270, meanlog=4, sdlog=2)
+```
+
+# Conclusion
+There were no statistical inferences and observations from the results obtained. They were probability questions that I solved using R. I double checked my answers to make sure my code was accurate, which was helpful on a few occasions, especially on problem 8, when I realized I had to subtract the argument by 1 for the dgeom() function to get the correct answer.  
