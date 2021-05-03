@@ -1,0 +1,186 @@
+---
+title: "Lab 4 - IE 6200 - Sec 09 - Jordan Lian"
+author: "Jordan Lian"
+date: "10/25/2020"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Problem Statement
+
+My understanding of the assignments comes from the most recent chapters, where we combined the basic probability concepts to understand probability mass/density functions, continuous/cumulative distribution functions, and joint probability. I mainly used the packet to solve the tasks for the assignment, which is what I usually do to complete the lab assignments.
+
+# Output
+
+```{r Libraries}
+library(tidyverse)
+library(reshape2)
+library(lubridate)
+library(dplyr)
+```
+
+## Task 1
+Import the Bluebikes dataset provided along with the assignment in R and save it as a data frame.
+```{r Task 1, echo=FALSE}
+bikes_df <- read.csv('bluebikes.csv', header = TRUE, sep = ',')
+str(bikes_df)
+```
+
+## Task 2
+Using the data, compute the following statistics for the number of bikes that were picked up or dropped off (either one or both if needed) from any station of your choosing (except for the ones analyzed in class) between 10:00 AM and 11:00 AM
+
+1. Probability Mass Function (PMF)
+2. Continuous Distribution Function (CDF)
+3. Expected Value
+4. Joint Probability
+5. Correlation Coefficient
+
+Create any visualizations that you feel appropriate to convey your findings. (Example: heatmap for joint
+probability)
+
+### PMF and CDF
+I chose to look at bikes picked up at the stop at South End Library – Tremont St at W Newton St between 10AM – 12PM. In this case, X is a random variable that represents the number of bikes picked up at South End Library – Tremont St at W Newton St. The assignment said between 10AM and 11AM, but when I generated the table, there was 1 row with PMF = 1, and CDF = 1. That is not useful for data, so I extended the time frame by 1 hour to generate at least 2 rows of data, where we got P(X = 1) and P(X = 3) along with P(X < 1) and P(X < 3). Below is a bar graph showing the number of days versus the count.
+```{r PMF and CDF}
+# Filter out data
+req_col <- select(bikes_df, start.station.name, month, date, hour)
+req_row <- dplyr::filter(req_col, 
+                         start.station.name == 'South End Library - Tremont St at W Newton St' 
+                         & hour >= 10 & hour <= 11)
+
+# Group by and summarize, pt 1
+daily <- group_by(req_row, month, date, hour)
+daily <- summarise(daily, count=n())
+
+# Group by and summarize, pt 2
+days <- group_by(daily, count)
+days <- summarise(days, num_days = n())
+
+# Get new columns
+pickup_pmf <- round(days$num_days/sum(days$num_days), 3)
+pickup_cdf <- round(cumsum(pickup_pmf), 3)
+
+# Final PMF and CDF Table
+South_End_freq <- cbind(days, pickup_pmf = pickup_pmf, pickup_cdf = pickup_cdf)
+South_End_freq
+```
+
+### Expected Value
+```{r EV}
+# shortcut
+South_End_freq_shortcut <- bikes_df %>%
+  select(start.station.name, month, date, hour) %>%
+  dplyr::filter(start.station.name == 'South End Library - Tremont St at W Newton St' 
+                & hour >= 10 & hour <= 11) %>%
+  group_by(month, date, hour) %>%
+  summarise(count = n()) %>%
+  group_by(count) %>%
+  summarise(num_days = n()) %>%
+  mutate(pickup_pmf = num_days/sum(num_days)) %>%
+  mutate(pickup_cdf = cumsum(pickup_pmf))
+South_End_freq_shortcut
+
+# South End Bar Graph
+South_End_visual <- ggplot(South_End_freq_shortcut, aes(count, pickup_pmf)) +
+  geom_bar(stat="identity", fill="steelblue") +
+  theme_bw() +
+  labs(x = 'Bikes Picked Up', y = 'Pickup Probability') +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_x_continuous("South End Library Pickup", 
+                     labels = as.character(South_End_freq_shortcut$count),
+                    breaks = South_End_freq_shortcut$count)
+South_End_visual
+
+# EV
+weighted.mean(South_End_freq_shortcut$count, South_End_freq_shortcut$pickup_pmf)
+```
+
+### Joint Probability
+I needed another random variable to evaluate joint probability. We already have X, so for Y, I decided to make Y a random variable that represents the number of bikes dropped off at the Andrew T Stop – Dorchester Ave at Dexter St between 10AM – 12PM. First, I generated a PMF/CDF table for just Y, then I combined X and Y to create the joint frequency and subsequently the joint probability table. Lastly, I created the final frequency table to create the heatmap for joint probability.
+
+```{r}
+Andrew_T_freq <- bikes_df %>%
+  select(end.station.name, month, date, hour) %>%
+  dplyr::filter(end.station.name == 'Andrew T Stop - Dorchester Ave at Dexter St' 
+                & hour >= 10 & hour <= 11) %>%
+  group_by(month, date, hour) %>%
+  summarise(count = n()) %>%
+  group_by(count) %>%
+  summarise(num_days = n()) %>%
+  mutate(pickup_pmf = num_days/sum(num_days)) %>%
+  mutate(pickup_cdf = cumsum(pickup_pmf))
+Andrew_T_freq
+
+# Use outer()
+joint_freq <- outer(South_End_freq_shortcut$num_days, Andrew_T_freq$num_days, FUN = "+")
+rownames(joint_freq) <- South_End_freq_shortcut$count
+colnames(joint_freq) <- Andrew_T_freq$count
+joint_freq
+
+# Get joint probability values
+joint_prob <- round(joint_freq/sum(joint_freq), 3)
+joint_prob
+
+joint_df <- melt(joint_freq)
+colnames(joint_df) <- c('South_End_Pickup', 'Andrew_T_Dropoff', 'Frequency')
+joint_df
+```
+
+### Correlation Coefficient
+```{r scatter}
+# Scatter Plot
+ggplot(data = joint_df, aes(x=South_End_Pickup, y=Andrew_T_Dropoff)) +
+  geom_point(aes(size = Frequency, color = Frequency)) + 
+  labs(x = 'South End Pickup', y = 'Andrew T Stop Dropoff') +
+  scale_x_continuous("South End Pickup", 
+                     labels = as.character(joint_df$South_End_freq_shortcut),
+                     breaks = joint_df$South_End_freq_shortcut) +
+  scale_y_continuous("Andrew T Stop Dropoff", 
+                     labels = as.character(joint_df$Andrew_T_freq),
+                     breaks = joint_df$Andrew_T_freq)
+```
+
+This heatmap has 4 points, thus showing the lack of data in this dataset given the constraints. It is clear that a lot more bikes are picked up at South End than bikes dropped off at the Andrew T Stop.
+
+```{r coefficient}
+# Coefficient
+South_End_Coeff <- bikes_df %>%
+  select(start.station.name, month, date, hour) %>%
+  dplyr::filter(start.station.name == 'South End Library - Tremont St at W Newton St' 
+                & hour >= 10 & hour <= 11) %>%
+  group_by(month, date) %>%
+  summarise(count = n())
+South_End_Coeff
+mod_South_End <- head(South_End_Coeff, 10)
+mod_South_End
+
+# Group
+Andrew_T_Coeff <- bikes_df %>%
+  select(end.station.name, month, date, hour) %>%
+  dplyr::filter(end.station.name == 'Andrew T Stop - Dorchester Ave at Dexter St' 
+                & hour >= 10 & hour <= 11) %>%
+  group_by(month, date) %>%
+  summarise(count = n())
+Andrew_T_Coeff
+
+# Manipulation
+South_End_mat <- c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0)
+Andrew_T_mat <- c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1)
+Corr_Coeff <- cor(South_End_mat, Andrew_T_mat)
+Corr_Coeff
+```
+
+This was a bit flawed, as I ran into issues calculating the coefficient because of different dimension sizes. So, I only used the first 10 rows of the South_End_Coeff table to calculate the coefficient. I could not see the other 20 values, so I had to get rid of them in my calculations. I then created respective matrices for each coefficient to calculate the overall coefficient. I used time to assign a value of 0 or 1, and ordered them chronologically. The South_End matrix had values of 1 from [0, 10] of a matrix of length 12 because the 2 dates for the Andrew_T matrix were the lowest chronologically. 
+
+I got a correlation coefficient of -1, which shows an inverse relationship. This was shown well by the frequency scatterplot, where it showed how few bikes were dropped off at Andrew T Stop versus how many bikes were picked up at South End – Tremont St at W Newton St.
+
+## Task 3 (Bonus Points)
+Search for datasets from reputed online data repositories (such as UCI Machine Learning Repository) and
+provide details about those for which similar statistics (PMF, CDF, Joint Probability) can be calculated.
+
+# Conclusion
+I wasn’t able to deduce much from this lab because the dataset was very minimal, and given the constraints assigned to us in the assignment, we could not generate a set of probability values that could tell us anything of real value. Regardless, I still learned a lot on how to calculate PMFs, CDFs, Joint Probabilities, and correlation coefficients, all while generating data visuals using ggplot2, which I know I need to work on. In the future, I would like to work with larger data sets so we can really see the impact of probability and statistics in real life. 
